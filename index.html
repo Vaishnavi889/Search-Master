@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Master</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="search-container">
+        <!-- Title and Description -->
+        <h1>Search Master</h1>
+        <p>Search for a term or website. Get instant info from our predefined list or Wikipedia.</p>
+
+        <!-- Search Form -->
+        <form id="searchForm" onsubmit="handleSearch(event)">
+            <input type="text" id="searchInput" placeholder="Enter term or website..." onkeyup="showSuggestions(this.value)" required>
+            <button type="submit">Search</button>
+        </form>
+
+        <!-- Auto-suggestions Dropdown -->
+        <ul class="list-container" id="suggestionsList">
+            <!-- Suggestions will appear here dynamically -->
+        </ul>
+    </div>
+
+    <!-- Result Section -->
+    <div class="result-container" id="resultsPage" style="display:none;">
+        <h2>Search Results</h2>
+        <p id="resultText">No results found.</p>
+    </div>
+
+    <!-- JavaScript for Auto-Suggestions, Search, and Wikipedia API -->
+    <script>
+        // List of example suggestions and their corresponding information
+        const suggestions = [
+            { word: 'HTML', info: 'HTML (HyperText Markup Language) is the standard markup language for creating web pages.' },
+            { word: 'CSS', info: 'CSS (Cascading Style Sheets) is a style sheet language used for describing the presentation of a document written in HTML or XML.' },
+            { word: 'Javascript', info: 'JavaScript is a high-level, dynamic, untyped, and interpreted programming language.' },
+            { word: 'Bootstrap', info: 'Bootstrap is a free and open-source CSS framework directed at responsive, mobile-first front-end web development.' },
+            { word: 'Canva', info: 'Canva is a graphic design platform that allows users to create social media graphics, presentations, posters, documents, and other visual content.' },
+            { word: 'Figma', info: 'Figma is a web-based UI/UX design application that allows for collaborative design and prototyping.' },
+            { word: 'Reactjs', info: 'React is a free and open-source front-end JavaScript library for building user interfaces based on UI components.' },
+            { word: 'jQuery', info: 'jQuery is a fast, small, and feature-rich JavaScript library that simplifies tasks like HTML document traversal, event handling, and animation.' },
+            { word: 'Hooks', info: 'Hooks are a new addition in React 16.8 that allow you to use state and other React features without writing a class.' }
+        ];
+
+        // Show auto-suggestions
+        function showSuggestions(value) {
+            const suggestionsList = document.getElementById('suggestionsList');
+            suggestionsList.innerHTML = ''; // Clear existing suggestions
+            if (value === '') return; // No suggestions if input is empty
+
+            // Filter and display suggestions
+            const filtered = suggestions.filter(suggestion => suggestion.word.toLowerCase().includes(value.toLowerCase()));
+            filtered.forEach(suggestion => {
+                const li = document.createElement('li');
+                li.innerHTML = suggestion.word;
+                li.onclick = () => {
+                    document.getElementById('searchInput').value = suggestion.word;
+                    suggestionsList.innerHTML = ''; // Hide suggestions after selection
+                    displayResult(suggestion.word);
+                };
+                suggestionsList.appendChild(li);
+            });
+        }
+
+        // Handle search
+        function handleSearch(event) {
+            event.preventDefault();
+            const input = document.getElementById('searchInput').value.trim();
+            const suggestion = suggestions.find(s => s.word.toLowerCase() === input.toLowerCase());
+
+            // Check if the input matches a predefined suggestion
+            if (suggestion) {
+                displayResult(suggestion.word);
+            } else {
+                // If no predefined suggestion matches, check if it's a website
+                if (isValidUrl(input)) {
+                    redirectToWebsite(input);
+                } else {
+                    // Otherwise, search on Wikipedia for any other term
+                    searchWikipedia(input);
+                }
+            }
+        }
+
+        // Check if input is a valid URL or domain
+        function isValidUrl(input) {
+            const pattern = /^(https?:\/\/)?(www\.)?[a-zA-Z0-9-]+(\.[a-zA-Z]{2,})(\/.*)?$/;
+            return pattern.test(input);
+        }
+
+        // Redirect to the website
+        function redirectToWebsite(input) {
+            let url = input.trim();
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url; // Prepend https:// if not present
+            }
+            window.location.href = url; // Redirect to the entered URL
+        }
+
+        // Search Wikipedia for the term
+        function searchWikipedia(term) {
+            const apiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(term)}`;
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.extract) {
+                        document.getElementById('resultText').innerHTML = `<strong>${data.title}:</strong> ${data.extract}`;
+                    } else {
+                        document.getElementById('resultText').innerHTML = 'No results found on Wikipedia.';
+                    }
+                    document.getElementById('resultsPage').style.display = 'block'; // Show results section
+                })
+                .catch(error => {
+                    console.error('Error fetching data from Wikipedia:', error);
+                    document.getElementById('resultText').innerHTML = 'Error fetching information.';
+                });
+        }
+
+        // Display search results for predefined terms
+        function displayResult(term) {
+            const resultText = document.getElementById('resultText');
+            const suggestion = suggestions.find(s => s.word.toLowerCase() === term.toLowerCase());
+            if (suggestion) {
+                resultText.innerHTML = `<strong>${suggestion.word}:</strong> ${suggestion.info}`;
+            } else {
+                resultText.innerText = 'No results found.';
+            }
+            document.getElementById('resultsPage').style.display = 'block'; // Show results section
+        }
+    </script>
+</body>
+</html>
