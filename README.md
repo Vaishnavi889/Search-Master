@@ -26,7 +26,7 @@ The project is built using HTML and CSS. Key elements include:
 
 1. *Clone the repository*:
    ```bash
-   git clone https://github.com/Vaishnavi889/search-master.git
+   git clone https://github.com/Vaishnavi889/Search-Master.git
 
 2. Open the index.html file in your browser to view the search interface.
 
